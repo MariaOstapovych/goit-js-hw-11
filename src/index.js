@@ -27,41 +27,59 @@ pagination.addEventListener('click', onPagination);
 searchForm.addEventListener("submit", onSearch);
 
 
-function onSearch(evt) {
-    evt.preventDefault();
-
-    pictureName = inputEl.value.trim();
-    fetchPixs(pictureName)
-        .then(data => {
+async function onSearch(evt) {
+  evt.preventDefault();
+  pictureName = inputEl.value.trim();
+    try {
+    const data = await fetchPixs(pictureName);
             if (data.hits.length === 0) {
-                Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-                gallery.innerHTML = '';
-            }else {
-                gallery.innerHTML = createMarkup(data.hits);
-                 pagination.removeAttribute('hidden', "false")
+              Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+              gallery.innerHTML = '';
+              pagination.setAttribute('hidden', "false");
+
+            } else if (pictureName === '') {
+              gallery.innerHTML = '';
+
+            } else if (data.totalHits <= 40 ) {
+              gallery.innerHTML = createMarkup(data.hits);
+              pagination.setAttribute('hidden', "false");
+              const message = document.createElement('p');
+              message.textContent = "We're sorry, but you've reached the end of search results.";
+              message.classList.add("gallery-message");
+              gallery.insertAdjacentElement('beforeend', message);
+              
+            } else {
+              gallery.innerHTML = createMarkup(data.hits);
+              pagination.removeAttribute('hidden', "false");
+              currentPage = 1;
             }
-        })
-        .catch((err) => console.log(err));
-    searchForm.reset();
+      } catch (err) {
+    console.log(err);
+  }
+  searchForm.reset();
 }
 
-function onPagination() {
-    let loadPicture = pictureName
-    currentPage += 1
-    fetchPixs(loadPicture, currentPage)
-        .then((data) => {
-            gallery.insertAdjacentHTML("beforeend", createMarkup(data.hits));
-            if (data.totalHits <= gallery.children.length) {
-                pagination.setAttribute('hidden', "false");
-                const message = document.createElement('p');
-                message.textContent = "We're sorry, but you've reached the end of search results.";
-                message.classList.add("gallery-message")
-                gallery.insertAdjacentElement('beforeend', message);
-            }
-    })
-    .catch((err) => console.log(err));
-}
+async function onPagination() {
+  const loadPicture = pictureName;
+  currentPage += 1;
+  try {
+    const data = await fetchPixs(loadPicture, currentPage);
+    gallery.insertAdjacentHTML("beforeend", createMarkup(data.hits));
 
+      if (data.hits.length === 0) {
+        pagination.setAttribute('hidden', "false");
+        
+      } else if (data.totalHits <= gallery.children.length) {
+        pagination.setAttribute('hidden', "false");
+        const message = document.createElement('p');
+        message.textContent = "We're sorry, but you've reached the end of search results.";
+        message.classList.add("gallery-message")
+        gallery.insertAdjacentElement('beforeend', message);
+    } 
+    } catch (err) {
+    console.log(err);
+  }
+}
 
 
 function createMarkup(arr) {

@@ -39,6 +39,8 @@ async function onSearch(evt) {
 
             } else if (pictureName === '') {
               gallery.innerHTML = '';
+              Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+              gallery.innerHTML = '';
 
             } else if (data.totalHits <= 40 ) {
               gallery.innerHTML = createMarkup(data.hits);
@@ -66,7 +68,7 @@ async function onPagination() {
     const data = await fetchPixs(loadPicture, currentPage);
     gallery.insertAdjacentHTML("beforeend", createMarkup(data.hits));
 
-      if (data.hits.length === 0) {
+    if (data.hits.length === 0) {
         pagination.setAttribute('hidden', "false");
         
       } else if (data.totalHits <= gallery.children.length) {
